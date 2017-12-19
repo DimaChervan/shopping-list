@@ -1,6 +1,5 @@
 import React from "react";
 import MuiThemeProvider from "material-ui/styles/MuiThemeProvider";
-import logo from "./logo.svg";
 import "./App.css";
 
 import ShoppingPanel from "./ShoppingPanel";
@@ -12,13 +11,7 @@ const products = [
 
 const App = () => (
   <MuiThemeProvider>
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <h1 className="App-title">Welcome to React</h1>
-      </header>
-      <ShoppingPanel products={products} />
-    </div>
+    <ShoppingPanel products={products} />
   </MuiThemeProvider>
 );
 

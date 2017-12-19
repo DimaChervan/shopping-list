@@ -1,17 +1,23 @@
 import React from "react";
-import { Toolbar, ToolbarGroup } from "material-ui/Toolbar";
 import RaisedButton from "material-ui/RaisedButton";
+import "./FilterBar.css";
 
 export default () => (
-  <Toolbar>
-    <ToolbarGroup>
-      <RaisedButton label="All" primary />
-    </ToolbarGroup>
-    <ToolbarGroup>
-      <RaisedButton label="Active" primary />
-    </ToolbarGroup>
-    <ToolbarGroup>
-      <RaisedButton label="Completed" primary />
-    </ToolbarGroup>
-  </Toolbar>
+  <div className="row center-xs filter-bar">
+    <div className="col-xs-4">
+      <div className="box">
+        <RaisedButton label="All" primary />
+      </div>
+    </div>
+    <div className="col-xs-4">
+      <div className="box">
+        <RaisedButton label="Active" primary />
+      </div>
+    </div>
+    <div className="col-xs-4">
+      <div className="box">
+        <RaisedButton label="Completed" primary />
+      </div>
+    </div>
+  </div>
 );
