@@ -11,11 +11,16 @@ const getFormatedDate = timestamp => {
   return date.toLocaleDateString("en-UA", { year: "numeric", month: "long", day: "2-digit" });
 };
 
-const ProductItem = ({ name, completed, createdDate }) => {
-  const checkBox = <Checkbox checked={completed} />;
+const onItemToggle = (fn, id) => () => fn(id);
+const onItemDelete = (fn, id) => () => fn(id);
+
+const ProductItem = ({ name, completed, createdDate, id, onProductToggle, onProductDelete }) => {
+  const onToggle = onItemToggle(onProductToggle, id);
+  const onDelete = onItemDelete(onProductDelete, id);
+  const checkBox = <Checkbox checked={completed} onCheck={onToggle} />;
   const date = getFormatedDate(createdDate);
   const deleteButton = (
-    <FloatingActionButton mini secondary>
+    <FloatingActionButton mini secondary onClick={onDelete}>
       <ActionDelete />
     </FloatingActionButton>
   );
@@ -24,9 +29,12 @@ const ProductItem = ({ name, completed, createdDate }) => {
 };
 
 ProductItem.propTypes = {
+  id: PropTypes.number.isRequired,
   name: PropTypes.string.isRequired,
   completed: PropTypes.bool.isRequired,
-  createdDate: PropTypes.number.isRequired
+  createdDate: PropTypes.number.isRequired,
+  onProductToggle: PropTypes.func.isRequired,
+  onProductDelete: PropTypes.func.isRequired
 };
 
 export default ProductItem;
