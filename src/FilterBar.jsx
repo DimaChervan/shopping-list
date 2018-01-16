@@ -1,32 +1,21 @@
 import React from "react";
-import PropTypes from "prop-types";
 import RaisedButton from "material-ui/RaisedButton";
+import WithActiveStyle from "./FilterButton";
+import FILTER_NAMES from "./constants";
 import "./FilterBar.css";
 
-const onFilterButtonClick = (fn, filter) => () => fn(filter);
+const FilterButton = WithActiveStyle(RaisedButton);
 
-const FilterBar = ({ onFilterChange }) => (
-  <div className="row center-xs filter-bar">
-    <div className="col-xs-4">
+const FilterBar = props => {
+  const buttons = Object.keys(FILTER_NAMES).map(filter => (
+    <div className="col-xs-4" key={filter}>
       <div className="box">
-        <RaisedButton label="All" primary onClick={onFilterButtonClick(onFilterChange, "")} />
+        <FilterButton filter={filter} {...props} />
       </div>
     </div>
-    <div className="col-xs-4">
-      <div className="box">
-        <RaisedButton label="Active" primary onClick={onFilterButtonClick(onFilterChange, "Active")} />
-      </div>
-    </div>
-    <div className="col-xs-4">
-      <div className="box">
-        <RaisedButton label="Completed" primary onClick={onFilterButtonClick(onFilterChange, "Completed")} />
-      </div>
-    </div>
-  </div>
-);
+  ));
 
-FilterBar.propTypes = {
-  onFilterChange: PropTypes.func.isRequired
+  return <div className="row center-xs filter-bar">{buttons}</div>;
 };
 
 export default FilterBar;

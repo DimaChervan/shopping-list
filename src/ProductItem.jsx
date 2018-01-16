@@ -29,7 +29,7 @@ const ProductItem = ({ name, completed, createdDate, id, onProductToggle, onProd
 };
 
 ProductItem.propTypes = {
-  id: PropTypes.number.isRequired,
+  id: PropTypes.string.isRequired,
   name: PropTypes.string.isRequired,
   completed: PropTypes.bool.isRequired,
   createdDate: PropTypes.number.isRequired,
