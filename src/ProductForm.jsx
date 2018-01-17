@@ -20,6 +20,9 @@ class ProductForm extends Component {
     const { name } = this.state;
 
     event.preventDefault();
+    if (name.length === 0) {
+      return false;
+    }
     onSubmit(name);
     this.setState({ name: "" });
   };

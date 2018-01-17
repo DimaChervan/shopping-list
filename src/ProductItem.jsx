@@ -1,4 +1,4 @@
-import React from "react";
+import React, { PureComponent } from "react";
 import PropTypes from "prop-types";
 import { ListItem } from "material-ui/List";
 import Checkbox from "material-ui/Checkbox";
@@ -14,19 +14,22 @@ const getFormatedDate = timestamp => {
 const onItemToggle = (fn, id) => () => fn(id);
 const onItemDelete = (fn, id) => () => fn(id);
 
-const ProductItem = ({ name, completed, createdDate, id, onProductToggle, onProductDelete }) => {
-  const onToggle = onItemToggle(onProductToggle, id);
-  const onDelete = onItemDelete(onProductDelete, id);
-  const checkBox = <Checkbox checked={completed} onCheck={onToggle} />;
-  const date = getFormatedDate(createdDate);
-  const deleteButton = (
-    <FloatingActionButton mini secondary onClick={onDelete}>
-      <ActionDelete />
-    </FloatingActionButton>
-  );
+class ProductItem extends PureComponent {
+  render() {
+    const { name, completed, createdDate, id, onProductToggle, onProductDelete } = this.props;
+    const onToggle = onItemToggle(onProductToggle, id);
+    const onDelete = onItemDelete(onProductDelete, id);
+    const checkBox = <Checkbox checked={completed} onCheck={onToggle} />;
+    const date = getFormatedDate(createdDate);
+    const deleteButton = (
+      <FloatingActionButton mini secondary onClick={onDelete}>
+        <ActionDelete />
+      </FloatingActionButton>
+    );
 
-  return <ListItem primaryText={name} secondaryText={date} leftCheckbox={checkBox} rightIconButton={deleteButton} />;
-};
+    return <ListItem primaryText={name} secondaryText={date} leftCheckbox={checkBox} rightIconButton={deleteButton} />;
+  }
+}
 
 ProductItem.propTypes = {
   id: PropTypes.string.isRequired,
