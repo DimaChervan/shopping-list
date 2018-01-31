@@ -3,7 +3,7 @@ import RaisedButton from "material-ui/RaisedButton";
 import LinearProgress from "material-ui/LinearProgress";
 import ProductList from "./ProductList";
 import FilterBar from "./FilterBar";
-import { guid } from "./utils";
+import guid from "./utils";
 import FILTER_NAMES from "./constants";
 import "./ShoppingPanel.css";
 
