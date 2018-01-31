@@ -25,6 +25,8 @@ class ProductForm extends Component {
     }
     onSubmit(name);
     this.setState({ name: "" });
+
+    return true;
   };
 
   render() {

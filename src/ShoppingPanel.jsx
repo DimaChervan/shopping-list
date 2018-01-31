@@ -22,8 +22,14 @@ class ShoppingPanel extends Component {
     ]
   };
 
-  handleFilterChange = filter => {
-    this.setState({ filter });
+  getProgress = () => {
+    const { products } = this.state;
+
+    if (products.length === 0) {
+      return 0;
+    }
+
+    return products.reduce((accum, { completed }) => accum + (completed ? 1 : 0), 0) / products.length * 100;
   };
 
   getFilteredProducts = () => {
@@ -35,6 +41,10 @@ class ShoppingPanel extends Component {
     }
 
     return products.filter(item => item.completed === filter);
+  };
+
+  handleFilterChange = filter => {
+    this.setState({ filter });
   };
 
   handleProductToggle = id => {
@@ -81,16 +91,6 @@ class ShoppingPanel extends Component {
     const newProducts = products.map(product => ({ ...product, completed: status }));
 
     this.setState({ products: newProducts });
-  };
-
-  getProgress = () => {
-    const { products } = this.state;
-
-    if (products.length === 0) {
-      return 0;
-    }
-
-    return products.reduce((accum, { completed }) => accum + (completed ? 1 : 0), 0) / products.length * 100;
   };
 
   render() {
