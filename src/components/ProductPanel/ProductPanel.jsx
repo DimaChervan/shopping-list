@@ -2,10 +2,10 @@ import React, { Component } from "react";
 import RaisedButton from "material-ui/RaisedButton";
 import LinearProgress from "material-ui/LinearProgress";
 import ProductList from "./ProductList";
-import FilterBar from "./FilterBar";
-import guid from "./utils";
-import FILTER_NAMES from "./constants";
-import "./ShoppingPanel.css";
+import FilterBar from "./ProductFilter";
+import guid from "../../utils";
+import FILTER_NAMES from "../../constants";
+import "./ProductPanel.css";
 
 const divider = { marginBottom: "8px" };
 const FILTER_VALUES = {
@@ -13,7 +13,7 @@ const FILTER_VALUES = {
   [FILTER_NAMES.Completed]: true
 };
 
-class ShoppingPanel extends Component {
+class ProductPanel extends Component {
   state = {
     filter: FILTER_NAMES.All,
     products: [
@@ -94,16 +94,15 @@ class ShoppingPanel extends Component {
   };
 
   render() {
-    const { products, filter } = this.state;
-    const filteredProducts = this.getFilteredProducts(products);
+    const { filter } = this.state; // products,
+    // const filteredProducts = this.getFilteredProducts(products);
     const progress = this.getProgress();
 
     return (
-      <div className="row center-xs shopping-panel">
+      <div className="row center-xs g-panel">
         <div className="col-xs-12 col-sm-9 col-md-6 col-lg-4">
           <div className="box">
             <ProductList
-              products={filteredProducts}
               onProductToggle={this.handleProductToggle}
               onProductDelete={this.handleProductDelete}
               onProductAdd={this.handleProductAdd}
@@ -119,4 +118,4 @@ class ShoppingPanel extends Component {
   }
 }
 
-export default ShoppingPanel;
+export default ProductPanel;

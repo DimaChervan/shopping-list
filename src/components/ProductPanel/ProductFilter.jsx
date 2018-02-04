@@ -1,8 +1,8 @@
 import React from "react";
 import RaisedButton from "material-ui/RaisedButton";
 import WithActiveStyle from "./FilterButton";
-import FILTER_NAMES from "./constants";
-import "./FilterBar.css";
+import FILTER_NAMES from "../../constants";
+import "./ProductFilter.css";
 
 const FilterButton = WithActiveStyle(RaisedButton);
 

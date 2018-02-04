@@ -1,6 +1,8 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
+import { connect } from "react-redux";
 import TextField from "material-ui/TextField";
+import { addProduct } from "../../ducks/products";
 
 class ProductForm extends Component {
   state = {
@@ -44,4 +46,4 @@ ProductForm.propTypes = {
   onSubmit: PropTypes.func.isRequired
 };
 
-export default ProductForm;
+export default connect(null, { onSubmit: addProduct })(ProductForm);

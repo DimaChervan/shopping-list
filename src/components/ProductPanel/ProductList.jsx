@@ -1,5 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
+import { connect } from "react-redux";
 import { List } from "material-ui/List";
 import Subheader from "material-ui/Subheader";
 import ProductItem from "./ProductItem";
@@ -15,7 +16,9 @@ const ProductList = ({ products, onProductToggle, onProductDelete, onProductAdd 
 
   return (
     <List>
-      <Subheader><ProductForm onSubmit={onProductAdd} /></Subheader>
+      <Subheader>
+        <ProductForm onSubmit={onProductAdd} />
+      </Subheader>
       {productItems}
     </List>
   );
@@ -28,4 +31,11 @@ ProductList.propTypes = {
   onProductAdd: PropTypes.func.isRequired
 };
 
-export default ProductList;
+const mapDispatchToProps = (state, props) => ({
+  products: state.products,
+  onProductToggle: props.onProductToggle,
+  onProductDelete: props.onProductDelete,
+  onProductAdd: props.onProductAdd
+});
+
+export default connect(mapDispatchToProps)(ProductList);
