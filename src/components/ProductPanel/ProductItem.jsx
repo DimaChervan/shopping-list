@@ -1,9 +1,11 @@
 import React, { PureComponent } from "react";
+import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import { ListItem } from "material-ui/List";
 import Checkbox from "material-ui/Checkbox";
 import FloatingActionButton from "material-ui/FloatingActionButton";
 import ActionDelete from "material-ui/svg-icons/action/delete";
+import { toggleProduct, deleteProduct } from "../../ducks/products";
 
 const getFormatedDate = timestamp => {
   const date = new Date(timestamp);
@@ -40,4 +42,4 @@ ProductItem.propTypes = {
   onProductDelete: PropTypes.func.isRequired
 };
 
-export default ProductItem;
+export default connect(null, { onProductToggle: toggleProduct, onProductDelete: deleteProduct })(ProductItem);

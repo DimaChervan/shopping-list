@@ -6,11 +6,11 @@ import "./ProductFilter.css";
 
 const FilterButton = WithActiveStyle(RaisedButton);
 
-const FilterBar = props => {
+const FilterBar = () => {
   const buttons = Object.keys(FILTER_NAMES).map(filter => (
     <div className="col-xs-4" key={filter}>
       <div className="box">
-        <FilterButton filter={filter} {...props} />
+        <FilterButton filter={filter} />
       </div>
     </div>
   ));
