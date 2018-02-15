@@ -1,3 +1,4 @@
+import { combineReducers } from "redux";
 import appName from "../config";
 import guid from "../utils";
 
@@ -7,8 +8,15 @@ const ADD_PRODUCT = `${prefix}ADD_PRODUCT`;
 const DELETE_PRODUCT = `${prefix}DELETE_PRODUCT`;
 const TOGGLE_PRODUCT = `${prefix}TOGGLE_PRODUCT`;
 const PROCESS_ALL_PRODUCTS = `${prefix}PROCESS_ALL_PRODUCTS`;
+const SET_VISIBILITY_FILTER = `${prefix}SET_VISIBILITY_FILTER`;
 
-export default (state = [], action) => {
+export const VISIBILITY_FILTERS = {
+  SHOW_ALL: "SHOW_ALL",
+  SHOW_ACTIVE: "SHOW_ACTIVE",
+  SHOW_COMPLETED: "SHOW_COMPLETED"
+};
+
+const productsReducer = (state = [], action) => {
   const { type, payload } = action;
 
   switch (type) {
@@ -54,23 +62,43 @@ export const processAllProducts = (completed = false) => ({
   payload: { completed }
 });
 
-const FILTER_NAMES = {
-  All: "All",
-  Active: "Active",
-  Completed: "Completed"
-};
+export const getProgress = products => {
+  if (products.length === 0) {
+    return 0;
+  }
 
-const FILTER_VALUES = {
-  [FILTER_NAMES.Active]: false,
-  [FILTER_NAMES.Completed]: true
+  return products.reduce((accum, { completed }) => accum + (completed ? 1 : 0), 0) / products.length * 100;
 };
 
 export const getFilteredProducts = (products, filter) => {
-  const filterValue = FILTER_VALUES[filter];
+  switch (filter) {
+    case VISIBILITY_FILTERS.SHOW_ALL:
+      return products;
+    case VISIBILITY_FILTERS.SHOW_ACTIVE:
+      return products.filter(product => !product.completed);
+    case VISIBILITY_FILTERS.SHOW_COMPLETED:
+      return products.filter(product => product.completed);
+    default:
+      return products;
+  }
+};
 
-  if (typeof filterValue === "undefined") {
-    return products;
+export const setVisibilityFilter = filter => ({
+  type: SET_VISIBILITY_FILTER,
+  payload: { filter }
+});
+
+const visibilityFilterReducer = (state = VISIBILITY_FILTERS.SHOW_ALL, action) => {
+  const { type, payload } = action;
+
+  if (type === SET_VISIBILITY_FILTER) {
+    return payload.filter;
   }
 
-  return products.filter(item => item.completed === filterValue);
+  return state;
 };
+
+export default combineReducers({
+  products: productsReducer,
+  visibilityFilter: visibilityFilterReducer
+});
