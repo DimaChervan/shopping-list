@@ -6,7 +6,6 @@ const withActiveStyle = Button => {
   const InnerWithActiveStyle = props => {
     const { filter, activeFilter, label, onClick } = props;
     const className = filter === activeFilter ? "filter-button--active" : "";
-    console.log(onClick);
     return <Button primary label={label} className={className} onClick={onClick} />;
   };
 
