@@ -1,11 +1,12 @@
-import { createStore } from "redux";
+import { createStore, applyMiddleware } from "redux";
+import createSagaMiddleware from "redux-saga";
 import reducer from "./reducer";
-import guid from "../utils";
+import saga from "./saga";
 
-const products = [
-  { id: guid(), name: "product 1", completed: true, createdDate: Date.now() },
-  { id: guid(), name: "product 2", completed: false, createdDate: Date.now() }
-];
-const store = createStore(reducer, { products });
+const sagaMiddleware = createSagaMiddleware();
+
+const store = createStore(reducer, applyMiddleware(sagaMiddleware));
+
+sagaMiddleware.run(saga);
 
 export default store;

@@ -1,10 +1,17 @@
 import { combineReducers } from "redux";
+import { call, put, takeEvery, all } from "redux-saga/effects";
+import firebase from "firebase";
 import appName from "../config";
-import guid from "../utils";
 
+// Constants
 const moduleName = "product";
 const prefix = `${appName}/${moduleName}/`;
-const ADD_PRODUCT = `${prefix}ADD_PRODUCT`;
+const FETCH_ALL_REQUEST = `${prefix}FETCH_ALL_REQUEST`;
+const FETCH_ALL_START = `${prefix}FETCH_ALL_START`;
+const FETCH_ALL_SUCCESS = `${prefix}FETCH_ALL_SUCCESS`;
+const ADD_PRODUCT_REQUEST = `${prefix}ADD_PRODUCT_REQUEST`;
+const ADD_PRODUCT_START = `${prefix}ADD_PRODUCT_START`;
+const ADD_PRODUCT_SUCCESS = `${prefix}ADD_PRODUCT_SUCCESS`;
 const DELETE_PRODUCT = `${prefix}DELETE_PRODUCT`;
 const TOGGLE_PRODUCT = `${prefix}TOGGLE_PRODUCT`;
 const PROCESS_ALL_PRODUCTS = `${prefix}PROCESS_ALL_PRODUCTS`;
@@ -16,11 +23,14 @@ export const VISIBILITY_FILTERS = {
   SHOW_COMPLETED: "SHOW_COMPLETED"
 };
 
+// Reducers
 const productsReducer = (state = [], action) => {
   const { type, payload } = action;
 
   switch (type) {
-    case ADD_PRODUCT:
+    case FETCH_ALL_SUCCESS:
+      return action.payload;
+    case ADD_PRODUCT_SUCCESS:
       return [...state, { ...payload }];
     case DELETE_PRODUCT:
       return state.filter(product => product.id !== payload.id);
@@ -42,9 +52,29 @@ const productsReducer = (state = [], action) => {
   }
 };
 
+const visibilityFilterReducer = (state = VISIBILITY_FILTERS.SHOW_ALL, action) => {
+  const { type, payload } = action;
+
+  if (type === SET_VISIBILITY_FILTER) {
+    return payload.filter;
+  }
+
+  return state;
+};
+
+export default combineReducers({
+  products: productsReducer,
+  visibilityFilter: visibilityFilterReducer
+});
+
+// Actions
+export const fetchAllProducts = () => ({
+  type: FETCH_ALL_REQUEST
+});
+
 export const addProduct = name => ({
-  type: ADD_PRODUCT,
-  payload: { id: guid(), name, completed: false, createdDate: Date.now() } // id and createdDate to middleware?
+  type: ADD_PRODUCT_REQUEST,
+  payload: { name, completed: false }
 });
 
 export const deleteProduct = id => ({
@@ -62,6 +92,7 @@ export const processAllProducts = (completed = false) => ({
   payload: { completed }
 });
 
+// Selectors
 export const getProgress = products => {
   if (products.length === 0) {
     return 0;
@@ -88,17 +119,48 @@ export const setVisibilityFilter = filter => ({
   payload: { filter }
 });
 
-const visibilityFilterReducer = (state = VISIBILITY_FILTERS.SHOW_ALL, action) => {
-  const { type, payload } = action;
+// Sagas
+function* fetchAllSaga() {
+  const ref = firebase.database().ref("products");
 
-  if (type === SET_VISIBILITY_FILTER) {
-    return payload.filter;
+  yield put({
+    type: FETCH_ALL_START
+  });
+  try {
+    const snapshot = yield call([ref, ref.once], "value");
+
+    const value = snapshot.val();
+
+    const list = Object.keys(value).map(key => ({ id: key, ...value[key], createdDate: Date.now() }));
+
+    yield put({
+      type: FETCH_ALL_SUCCESS,
+      payload: list
+    });
+  } catch (error) {
+    console.log(error);
   }
+}
 
-  return state;
-};
+function* addProdcutSaga({ payload }) {
+  const ref = firebase.database().ref("products");
 
-export default combineReducers({
-  products: productsReducer,
-  visibilityFilter: visibilityFilterReducer
-});
+  yield put({
+    type: ADD_PRODUCT_START
+  });
+
+  try {
+    const { key } = yield call([ref, ref.push], payload);
+
+    yield put({
+      type: ADD_PRODUCT_SUCCESS,
+      payload: { id: key, ...payload, createdDate: Date.now() } // this should do firebase by copmuted fields
+    });
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export function* saga() {
+  yield all([takeEvery(FETCH_ALL_REQUEST, fetchAllSaga), takeEvery(ADD_PRODUCT_REQUEST, addProdcutSaga)]);
+}
