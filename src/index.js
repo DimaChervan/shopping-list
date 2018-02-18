@@ -1,3 +1,3 @@
-import render from "./Root";
+import render from "./components/Root";
 
 render();

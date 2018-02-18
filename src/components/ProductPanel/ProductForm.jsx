@@ -1,8 +1,6 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
-import { connect } from "react-redux";
 import TextField from "material-ui/TextField";
-import { addProduct } from "../../ducks/products";
 
 class ProductForm extends Component {
   state = {
@@ -18,14 +16,14 @@ class ProductForm extends Component {
   };
 
   handleFormSubmit = event => {
-    const { onSubmit } = this.props;
+    const { onProductAdd } = this.props;
     const { name } = this.state;
 
     event.preventDefault();
     if (name.length === 0) {
       return false;
     }
-    onSubmit(name);
+    onProductAdd(name);
     this.setState({ name: "" });
 
     return true;
@@ -43,7 +41,7 @@ class ProductForm extends Component {
 }
 
 ProductForm.propTypes = {
-  onSubmit: PropTypes.func.isRequired
+  onProductAdd: PropTypes.func.isRequired
 };
 
-export default connect(null, { onSubmit: addProduct })(ProductForm);
+export default ProductForm;

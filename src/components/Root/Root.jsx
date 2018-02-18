@@ -1,10 +1,10 @@
 import React from "react";
-import ReactDOM from "react-dom";
+import { render } from "react-dom";
 import { Provider } from "react-redux";
 import MuiThemeProvider from "material-ui/styles/MuiThemeProvider";
-import store from "./redux";
-import "./index.css";
-import App from "./components/App";
+import store from "../../redux";
+import "../../index.css";
+import App from "../App";
 
 const Root = () => (
   <Provider store={store}>
@@ -15,5 +15,5 @@ const Root = () => (
 );
 
 export default () => {
-  ReactDOM.render(<Root />, document.getElementById("root"));
+  render(<Root />, document.getElementById("root"));
 };
