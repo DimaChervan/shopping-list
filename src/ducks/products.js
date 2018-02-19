@@ -136,8 +136,9 @@ function* fetchAllSaga() {
     const snapshot = yield call([ref, ref.once], "value");
 
     const value = snapshot.val();
+    const keys = value ? Object.keys(value) : [];
 
-    const list = Object.keys(value).map(key => ({ id: key, ...value[key], createdDate: Date.now() }));
+    const list = keys.map(key => ({ id: key, ...value[key] }));
 
     yield put({
       type: FETCH_ALL_SUCCESS,
@@ -156,11 +157,12 @@ function* addProdcutSaga({ payload }) {
   });
 
   try {
-    const { key } = yield call([ref, ref.push], payload);
+    const updates = { ...payload, createdDate: Date.now() }; // firebase functions
+    const { key } = yield call([ref, ref.push], updates);
 
     yield put({
       type: ADD_PRODUCT_SUCCESS,
-      payload: { id: key, ...payload, createdDate: Date.now() } // this should do firebase by copmuted fields
+      payload: { id: key, ...updates }
     });
   } catch (error) {
     console.log(error);
