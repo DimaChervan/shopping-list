@@ -1,10 +1,10 @@
 import { combineReducers } from "redux";
-import { call, put, takeEvery, all } from "redux-saga/effects";
+import { call, put, takeEvery, all, select } from "redux-saga/effects";
 import firebase from "firebase";
 import appName from "../config";
 
 // Constants
-const moduleName = "product";
+const moduleName = "products";
 const prefix = `${appName}/${moduleName}/`;
 const FETCH_ALL_REQUEST = `${prefix}FETCH_ALL_REQUEST`;
 const FETCH_ALL_START = `${prefix}FETCH_ALL_START`;
@@ -12,8 +12,12 @@ const FETCH_ALL_SUCCESS = `${prefix}FETCH_ALL_SUCCESS`;
 const ADD_PRODUCT_REQUEST = `${prefix}ADD_PRODUCT_REQUEST`;
 const ADD_PRODUCT_START = `${prefix}ADD_PRODUCT_START`;
 const ADD_PRODUCT_SUCCESS = `${prefix}ADD_PRODUCT_SUCCESS`;
-const DELETE_PRODUCT = `${prefix}DELETE_PRODUCT`;
-const TOGGLE_PRODUCT = `${prefix}TOGGLE_PRODUCT`;
+const DELETE_PRODUCT_START = `${prefix}DELETE_PRODUCT_START`;
+const DELETE_PRODUCT_REQUEST = `${prefix}DELETE_PRODUCT_REQUEST`;
+const DELETE_PRODUCT_SUCCESS = `${prefix}DELETE_PRODUCT_SUCCESS`;
+const TOGGLE_PRODUCT_START = `${prefix}TOGGLE_PRODUCT_START`;
+const TOGGLE_PRODUCT_REQUEST = `${prefix}TOGGLE_PRODUCT_REQUEST`;
+const TOGGLE_PRODUCT_SUCCESS = `${prefix}TOGGLE_PRODUCT_SUCCESS`;
 const PROCESS_ALL_PRODUCTS = `${prefix}PROCESS_ALL_PRODUCTS`;
 const SET_VISIBILITY_FILTER = `${prefix}SET_VISIBILITY_FILTER`;
 
@@ -32,9 +36,9 @@ const productsReducer = (state = [], action) => {
       return action.payload;
     case ADD_PRODUCT_SUCCESS:
       return [...state, { ...payload }];
-    case DELETE_PRODUCT:
+    case DELETE_PRODUCT_REQUEST:
       return state.filter(product => product.id !== payload.id);
-    case TOGGLE_PRODUCT:
+    case TOGGLE_PRODUCT_SUCCESS:
       return state.map(product => {
         if (product.id === payload.id) {
           return {
@@ -63,7 +67,7 @@ const visibilityFilterReducer = (state = VISIBILITY_FILTERS.SHOW_ALL, action) =>
 };
 
 export default combineReducers({
-  products: productsReducer,
+  [moduleName]: productsReducer,
   visibilityFilter: visibilityFilterReducer
 });
 
@@ -78,12 +82,12 @@ export const addProduct = name => ({
 });
 
 export const deleteProduct = id => ({
-  type: DELETE_PRODUCT,
+  type: DELETE_PRODUCT_REQUEST,
   payload: { id }
 });
 
 export const toggleProduct = id => ({
-  type: TOGGLE_PRODUCT,
+  type: TOGGLE_PRODUCT_REQUEST,
   payload: { id }
 });
 
@@ -118,6 +122,8 @@ export const setVisibilityFilter = filter => ({
   type: SET_VISIBILITY_FILTER,
   payload: { filter }
 });
+
+const stateSelector = state => state[moduleName];
 
 // Sagas
 function* fetchAllSaga() {
@@ -161,6 +167,60 @@ function* addProdcutSaga({ payload }) {
   }
 }
 
+function* deleteProdcutSaga({ payload }) {
+  const ref = firebase.database().ref("products");
+
+  yield put({
+    type: DELETE_PRODUCT_START
+  });
+
+  try {
+    const updates = {
+      [payload.id]: null
+    };
+
+    yield call([ref, ref.update], updates);
+
+    yield put({
+      type: DELETE_PRODUCT_SUCCESS,
+      payload
+    });
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+function* toggleProductSaga({ payload }) {
+  const { id } = payload;
+  const ref = firebase.database().ref(`products/${id}`);
+
+  yield put({
+    type: TOGGLE_PRODUCT_START
+  });
+
+  const state = yield select(stateSelector);
+
+  const [product] = state.filter(item => item.id === id); // todo rework this
+
+  try {
+    const updates = { completed: !product.completed };
+
+    yield call([ref, ref.update], updates);
+
+    yield put({
+      type: TOGGLE_PRODUCT_SUCCESS,
+      payload
+    });
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 export function* saga() {
-  yield all([takeEvery(FETCH_ALL_REQUEST, fetchAllSaga), takeEvery(ADD_PRODUCT_REQUEST, addProdcutSaga)]);
+  yield all([
+    takeEvery(FETCH_ALL_REQUEST, fetchAllSaga),
+    takeEvery(ADD_PRODUCT_REQUEST, addProdcutSaga),
+    takeEvery(DELETE_PRODUCT_REQUEST, deleteProdcutSaga),
+    takeEvery(TOGGLE_PRODUCT_REQUEST, toggleProductSaga)
+  ]);
 }
