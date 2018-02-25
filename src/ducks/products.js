@@ -28,29 +28,37 @@ export const VISIBILITY_FILTERS = {
 };
 
 // Reducers
-const productsReducer = (state = [], action) => {
+const productsReducer = (state = {}, action) => {
   const { type, payload } = action;
 
   switch (type) {
     case FETCH_ALL_SUCCESS:
       return action.payload;
-    case ADD_PRODUCT_SUCCESS:
-      return [...state, { ...payload }];
-    case DELETE_PRODUCT_REQUEST:
-      return state.filter(product => product.id !== payload.id);
-    case TOGGLE_PRODUCT_SUCCESS:
-      return state.map(product => {
-        if (product.id === payload.id) {
-          return {
-            ...product,
-            completed: !product.completed
-          };
-        }
+    case ADD_PRODUCT_SUCCESS: {
+      const newState = { ...state };
+      newState[payload.id] = payload;
+      return newState;
+    }
 
-        return product;
-      });
-    case PROCESS_ALL_PRODUCTS:
-      return state.map(product => ({ ...product, completed: payload.completed }));
+    case DELETE_PRODUCT_REQUEST: {
+      const newState = { ...state };
+      delete newState[payload.id];
+      return newState;
+    }
+    case TOGGLE_PRODUCT_SUCCESS: {
+      const { id } = payload;
+      const newState = { ...state };
+      newState[id].completed = !newState[id].completed;
+      return newState;
+    }
+    case PROCESS_ALL_PRODUCTS: {
+      const completed = { payload };
+      const newState = { ...state };
+
+      Object.keys(newState).forEach(id => ({ ...newState[id], completed }));
+
+      return newState;
+    }
     default:
       return state;
   }
@@ -97,24 +105,28 @@ export const processAllProducts = (completed = false) => ({
 });
 
 // Selectors
+const getProductsArray = products => Object.keys(products).map(id => ({ id, ...products[id] }));
+
 export const getProgress = products => {
-  if (products.length === 0) {
+  const productsArr = getProductsArray(products);
+  if (productsArr.length === 0) {
     return 0;
   }
 
-  return products.reduce((accum, { completed }) => accum + (completed ? 1 : 0), 0) / products.length * 100;
+  return productsArr.reduce((accum, { completed }) => accum + (completed ? 1 : 0), 0) / productsArr.length * 100;
 };
 
 export const getFilteredProducts = (products, filter) => {
+  const productsArr = getProductsArray(products);
   switch (filter) {
     case VISIBILITY_FILTERS.SHOW_ALL:
-      return products;
+      return productsArr;
     case VISIBILITY_FILTERS.SHOW_ACTIVE:
-      return products.filter(product => !product.completed);
+      return productsArr.filter(product => !product.completed);
     case VISIBILITY_FILTERS.SHOW_COMPLETED:
-      return products.filter(product => product.completed);
+      return productsArr.filter(product => product.completed);
     default:
-      return products;
+      return productsArr;
   }
 };
 
@@ -136,13 +148,10 @@ function* fetchAllSaga() {
     const snapshot = yield call([ref, ref.once], "value");
 
     const value = snapshot.val();
-    const keys = value ? Object.keys(value) : [];
-
-    const list = keys.map(key => ({ id: key, ...value[key] }));
 
     yield put({
       type: FETCH_ALL_SUCCESS,
-      payload: list
+      payload: value || {}
     });
   } catch (error) {
     console.log(error);
@@ -202,7 +211,7 @@ function* toggleProductSaga({ payload }) {
 
   const state = yield select(stateSelector);
 
-  const [product] = state.filter(item => item.id === id); // todo rework this
+  const product = state[id];
 
   try {
     const updates = { completed: !product.completed };
