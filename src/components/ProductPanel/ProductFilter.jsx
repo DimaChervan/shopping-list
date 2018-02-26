@@ -1,37 +1,14 @@
 import React from "react";
-import PropTypes from "prop-types";
-import RaisedButton from "material-ui/RaisedButton";
-import withActiveStyle from "./withActiveStyle";
-import { VISIBILITY_FILTERS } from "../../ducks/products";
+import ProductFilterButton from "./ProductFilterButton";
 import "./ProductFilter.css";
+import { VISIBILITY_FILTERS } from "../../ducks/products";
 
-const FILTER_BUTTONS = {
-  [VISIBILITY_FILTERS.SHOW_ALL]: "ALL",
-  [VISIBILITY_FILTERS.SHOW_ACTIVE]: "ACTIVE",
-  [VISIBILITY_FILTERS.SHOW_COMPLETED]: "COMPLETED"
-};
-const ButtonWithActiveStyle = withActiveStyle(RaisedButton);
-
-const ProductFilter = ({ handleFilterChange, activeFilter }) => {
-  const buttons = Object.keys(FILTER_BUTTONS).map(filter => (
-    <div className="col-xs-4" key={filter}>
-      <div className="box">
-        <ButtonWithActiveStyle
-          filter={filter}
-          activeFilter={activeFilter}
-          label={FILTER_BUTTONS[filter]}
-          onClick={() => handleFilterChange(filter)}
-        />
-      </div>
-    </div>
-  ));
-
-  return <div className="row center-xs filter-bar">{buttons}</div>;
-};
-
-ProductFilter.propTypes = {
-  activeFilter: PropTypes.string.isRequired,
-  handleFilterChange: PropTypes.func.isRequired
-};
+const ProductFilter = () => (
+  <div className="row center-xs filter-bar">
+    <ProductFilterButton filter={VISIBILITY_FILTERS.SHOW_ALL} label="ALL" />
+    <ProductFilterButton filter={VISIBILITY_FILTERS.SHOW_ACTIVE} label="ACTIVE" />
+    <ProductFilterButton filter={VISIBILITY_FILTERS.SHOW_COMPLETED} label="COMPLETED" />
+  </div>
+);
 
 export default ProductFilter;

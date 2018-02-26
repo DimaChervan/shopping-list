@@ -6,9 +6,9 @@ import ProductFilter from "./ProductFilter";
 
 const divider = { marginBottom: "8px" };
 
-const Footer = ({ progress, activeFilter, onCompleteAll, onClearAll, handleFilterChange }) => (
+const Footer = ({ progress, onCompleteAll, onClearAll }) => (
   <React.Fragment>
-    <ProductFilter activeFilter={activeFilter} handleFilterChange={handleFilterChange} />
+    <ProductFilter />
     <LinearProgress mode="determinate" value={progress} style={divider} />
     <RaisedButton label="Complete All" fullWidth primary style={divider} onClick={onCompleteAll} />
     <RaisedButton label="Clear completed" fullWidth secondary onClick={onClearAll} />
@@ -17,10 +17,8 @@ const Footer = ({ progress, activeFilter, onCompleteAll, onClearAll, handleFilte
 
 Footer.propTypes = {
   progress: PropTypes.number.isRequired,
-  activeFilter: PropTypes.string.isRequired,
   onCompleteAll: PropTypes.func.isRequired,
-  onClearAll: PropTypes.func.isRequired,
-  handleFilterChange: PropTypes.func.isRequired
+  onClearAll: PropTypes.func.isRequired
 };
 
 export default Footer;

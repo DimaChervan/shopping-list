@@ -22,9 +22,9 @@ const PROCESS_ALL_PRODUCTS = `${prefix}PROCESS_ALL_PRODUCTS`;
 const SET_VISIBILITY_FILTER = `${prefix}SET_VISIBILITY_FILTER`;
 
 export const VISIBILITY_FILTERS = {
-  SHOW_ALL: "SHOW_ALL",
-  SHOW_ACTIVE: "SHOW_ACTIVE",
-  SHOW_COMPLETED: "SHOW_COMPLETED"
+  SHOW_ALL: "",
+  SHOW_ACTIVE: "active",
+  SHOW_COMPLETED: "completed"
 };
 
 // Reducers
@@ -33,7 +33,7 @@ const productsReducer = (state = {}, action) => {
 
   switch (type) {
     case FETCH_ALL_SUCCESS:
-      return action.payload;
+      return { ...state, ...action.payload };
     case ADD_PRODUCT_SUCCESS: {
       const newState = { ...state };
       newState[payload.id] = payload;
