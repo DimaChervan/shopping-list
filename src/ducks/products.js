@@ -22,9 +22,9 @@ const PROCESS_ALL_PRODUCTS = `${prefix}PROCESS_ALL_PRODUCTS`;
 const SET_VISIBILITY_FILTER = `${prefix}SET_VISIBILITY_FILTER`;
 
 export const VISIBILITY_FILTERS = {
-  SHOW_ALL: "",
-  SHOW_ACTIVE: "active",
-  SHOW_COMPLETED: "completed"
+  all: "",
+  active: "active",
+  completed: "completed"
 };
 
 // Reducers
@@ -64,7 +64,7 @@ const productsReducer = (state = {}, action) => {
   }
 };
 
-const visibilityFilterReducer = (state = VISIBILITY_FILTERS.SHOW_ALL, action) => {
+const visibilityFilterReducer = (state = VISIBILITY_FILTERS.all, action) => {
   const { type, payload } = action;
 
   if (type === SET_VISIBILITY_FILTER) {
@@ -119,11 +119,11 @@ export const getProgress = products => {
 export const getFilteredProducts = (products, filter) => {
   const productsArr = getProductsArray(products);
   switch (filter) {
-    case VISIBILITY_FILTERS.SHOW_ALL:
+    case VISIBILITY_FILTERS.all:
       return productsArr;
-    case VISIBILITY_FILTERS.SHOW_ACTIVE:
+    case VISIBILITY_FILTERS.active:
       return productsArr.filter(product => !product.completed);
-    case VISIBILITY_FILTERS.SHOW_COMPLETED:
+    case VISIBILITY_FILTERS.completed:
       return productsArr.filter(product => product.completed);
     default:
       return productsArr;

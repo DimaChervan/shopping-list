@@ -8,9 +8,15 @@ const redirect = () => <Redirect to="/" />;
 
 const App = () => (
   <Switch>
-    <Route exact path={`/${VISIBILITY_FILTERS.SHOW_ALL}`} component={ProductPanel} />
-    <Route path={`/${VISIBILITY_FILTERS.SHOW_ACTIVE}`} component={ProductPanel} />
-    <Route path={`/${VISIBILITY_FILTERS.SHOW_COMPLETED}`} component={ProductPanel} />
+    <Route
+      exact
+      path="/:filter?"
+      render={({ match }) => {
+        const { filter = "all" } = match.params;
+
+        return Object.prototype.hasOwnProperty.call(VISIBILITY_FILTERS, filter) ? <ProductPanel /> : redirect();
+      }}
+    />
     <Route render={redirect} />
   </Switch>
 );

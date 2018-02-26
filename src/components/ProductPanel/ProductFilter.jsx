@@ -5,9 +5,9 @@ import { VISIBILITY_FILTERS } from "../../ducks/products";
 
 const ProductFilter = () => (
   <div className="row center-xs filter-bar">
-    <ProductFilterButton filter={VISIBILITY_FILTERS.SHOW_ALL} label="ALL" />
-    <ProductFilterButton filter={VISIBILITY_FILTERS.SHOW_ACTIVE} label="ACTIVE" />
-    <ProductFilterButton filter={VISIBILITY_FILTERS.SHOW_COMPLETED} label="COMPLETED" />
+    <ProductFilterButton filter={VISIBILITY_FILTERS.all} label="ALL" />
+    <ProductFilterButton filter={VISIBILITY_FILTERS.active} label="ACTIVE" />
+    <ProductFilterButton filter={VISIBILITY_FILTERS.completed} label="COMPLETED" />
   </div>
 );
 
