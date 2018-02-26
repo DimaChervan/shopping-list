@@ -6,11 +6,24 @@ import { fetchAllProducts, addProduct, toggleProduct, deleteProduct, getFiltered
 
 class ProductListContainer extends Component {
   componentDidMount() {
-    this.props.fetchAllProducts();
+    this.fetchData();
+  }
+
+  componentDidUpdate(prevProps) {
+    const { filter } = this.props;
+    if (filter !== prevProps.filter) {
+      this.fetchData();
+    }
+  }
+
+  fetchData() {
+    const { filter, fetchProducts } = this.props;
+    fetchProducts(filter);
   }
 
   render() {
     const { products, onProductAdd, onProductToggle, onProductDelete } = this.props;
+
     return (
       <ProductList
         products={products}
@@ -24,18 +37,19 @@ class ProductListContainer extends Component {
 
 ProductListContainer.propTypes = {
   products: PropTypes.arrayOf(PropTypes.object).isRequired,
-  fetchAllProducts: PropTypes.func.isRequired,
+  filter: PropTypes.string.isRequired,
+  fetchProducts: PropTypes.func.isRequired,
   onProductAdd: PropTypes.func.isRequired,
   onProductToggle: PropTypes.func.isRequired,
   onProductDelete: PropTypes.func.isRequired
 };
 
-const mapStateToProps = state => ({
-  products: getFilteredProducts(state.products, state.visibilityFilter)
+const mapStateToProps = ({ products, visibilityFilter }) => ({
+  products: getFilteredProducts(products, visibilityFilter)
 });
 
 export default connect(mapStateToProps, {
-  fetchAllProducts,
+  fetchProducts: fetchAllProducts,
   onProductAdd: addProduct,
   onProductToggle: toggleProduct,
   onProductDelete: deleteProduct

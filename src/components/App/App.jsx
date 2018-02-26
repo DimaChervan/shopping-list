@@ -14,7 +14,11 @@ const App = () => (
       render={({ match }) => {
         const { filter = "all" } = match.params;
 
-        return Object.prototype.hasOwnProperty.call(VISIBILITY_FILTERS, filter) ? <ProductPanel /> : redirect();
+        return Object.prototype.hasOwnProperty.call(VISIBILITY_FILTERS, filter) ? (
+          <ProductPanel filter={filter} />
+        ) : (
+          redirect()
+        );
       }}
     />
     <Route render={redirect} />
