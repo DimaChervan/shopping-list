@@ -1,8 +1,7 @@
 import { combineReducers } from "redux";
 import { call, put, takeEvery, all, select } from "redux-saga/effects";
-import firebase from "firebase";
 import appName from "../config";
-import { fetchAllProducts, fetchFilteredProducts } from "../api";
+import * as api from "../api";
 
 // Constants
 const moduleName = "products";
@@ -21,6 +20,8 @@ const TOGGLE_PRODUCT_REQUEST = `${prefix}TOGGLE_PRODUCT_REQUEST`;
 const TOGGLE_PRODUCT_SUCCESS = `${prefix}TOGGLE_PRODUCT_SUCCESS`;
 const PROCESS_ALL_PRODUCTS = `${prefix}PROCESS_ALL_PRODUCTS`;
 const SET_VISIBILITY_FILTER = `${prefix}SET_VISIBILITY_FILTER`;
+
+const productFilterKey = "completed";
 
 export const VISIBILITY_FILTERS = {
   all: "",
@@ -139,16 +140,16 @@ export const setVisibilityFilter = filter => ({
 
 const stateSelector = state => state[moduleName];
 
-const getFetchMethodByFilter = (filter) => {
+const getFetchMethodByFilter = filter => {
   switch (filter) {
-    case 'active':
-      return () => fetchFilteredProducts(false);
-    case 'completed':
-      return () => fetchFilteredProducts(true);
+    case VISIBILITY_FILTERS.active:
+      return () => api.fetchFilteredProducts(productFilterKey, false);
+    case VISIBILITY_FILTERS.completed:
+      return () => api.fetchFilteredProducts(productFilterKey, true);
     default:
-      return fetchAllProducts;
+      return api.fetchAllProducts;
   }
-}
+};
 
 // Sagas
 function* fetchProductsSaga({ payload }) {
@@ -172,16 +173,14 @@ function* fetchProductsSaga({ payload }) {
   }
 }
 
-function* addProdcutSaga({ payload }) {
-  const ref = firebase.database().ref("products");
-
+function* addProductSaga({ payload }) {
   yield put({
     type: ADD_PRODUCT_START
   });
 
   try {
     const updates = { ...payload, createdDate: Date.now() }; // firebase functions
-    const { key } = yield call([ref, ref.push], updates);
+    const { key } = yield call(api.addProduct, updates);
 
     yield put({
       type: ADD_PRODUCT_SUCCESS,
@@ -192,9 +191,7 @@ function* addProdcutSaga({ payload }) {
   }
 }
 
-function* deleteProdcutSaga({ payload }) {
-  const ref = firebase.database().ref("products");
-
+function* deleteProductSaga({ payload }) {
   yield put({
     type: DELETE_PRODUCT_START
   });
@@ -204,7 +201,7 @@ function* deleteProdcutSaga({ payload }) {
       [payload.id]: null
     };
 
-    yield call([ref, ref.update], updates);
+    yield call(api.deleteProduct, updates);
 
     yield put({
       type: DELETE_PRODUCT_SUCCESS,
@@ -216,21 +213,18 @@ function* deleteProdcutSaga({ payload }) {
 }
 
 function* toggleProductSaga({ payload }) {
-  const { id } = payload;
-  const ref = firebase.database().ref(`products/${id}`);
-
   yield put({
     type: TOGGLE_PRODUCT_START
   });
 
+  const { id } = payload;
   const state = yield select(stateSelector);
-
   const product = state[id];
 
   try {
     const updates = { completed: !product.completed };
 
-    yield call([ref, ref.update], updates);
+    yield call(api.toggleProduct, id, updates);
 
     yield put({
       type: TOGGLE_PRODUCT_SUCCESS,
@@ -244,8 +238,8 @@ function* toggleProductSaga({ payload }) {
 export function* saga() {
   yield all([
     takeEvery(FETCH_PRODUCTS_REQUEST, fetchProductsSaga),
-    takeEvery(ADD_PRODUCT_REQUEST, addProdcutSaga),
-    takeEvery(DELETE_PRODUCT_REQUEST, deleteProdcutSaga),
+    takeEvery(ADD_PRODUCT_REQUEST, addProductSaga),
+    takeEvery(DELETE_PRODUCT_REQUEST, deleteProductSaga),
     takeEvery(TOGGLE_PRODUCT_REQUEST, toggleProductSaga)
   ]);
 }

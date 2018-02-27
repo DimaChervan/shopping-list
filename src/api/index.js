@@ -1,11 +1,23 @@
 import firebase from "firebase";
 
-const ref = firebase.database().ref("products");
+const refName = "products";
+
+const ref = firebase.database().ref(refName);
 
 export const fetchAllProducts = () => ref.once("value");
 
-export const fetchFilteredProducts = filter =>
+export const fetchFilteredProducts = (key, filter) =>
   ref
-    .orderByChild("completed")
+    .orderByChild(key)
     .equalTo(filter)
     .once("value");
+
+export const addProduct = product => ref.push(product);
+
+export const deleteProduct = product => ref.update(product);
+
+export const toggleProduct = (id, product) =>
+  firebase
+    .database()
+    .ref(`${refName}/${id}`)
+    .update(product);
