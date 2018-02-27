@@ -2,13 +2,14 @@ import { combineReducers } from "redux";
 import { call, put, takeEvery, all, select } from "redux-saga/effects";
 import firebase from "firebase";
 import appName from "../config";
+import { fetchAllProducts, fetchFilteredProducts } from "../api";
 
 // Constants
 const moduleName = "products";
 const prefix = `${appName}/${moduleName}/`;
-const FETCH_ALL_REQUEST = `${prefix}FETCH_ALL_REQUEST`;
-const FETCH_ALL_START = `${prefix}FETCH_ALL_START`;
-const FETCH_ALL_SUCCESS = `${prefix}FETCH_ALL_SUCCESS`;
+const FETCH_PRODUCTS_REQUEST = `${prefix}FETCH_PRODUCTS_REQUEST`;
+const FETCH_PRODUCTS_START = `${prefix}FETCH_PRODUCTS_START`;
+const FETCH_PRODUCTS_SUCCESS = `${prefix}FETCH_PRODUCTS_SUCCESS`;
 const ADD_PRODUCT_REQUEST = `${prefix}ADD_PRODUCT_REQUEST`;
 const ADD_PRODUCT_START = `${prefix}ADD_PRODUCT_START`;
 const ADD_PRODUCT_SUCCESS = `${prefix}ADD_PRODUCT_SUCCESS`;
@@ -32,7 +33,7 @@ const productsReducer = (state = {}, action) => {
   const { type, payload } = action;
 
   switch (type) {
-    case FETCH_ALL_SUCCESS:
+    case FETCH_PRODUCTS_SUCCESS:
       return { ...state, ...action.payload };
     case ADD_PRODUCT_SUCCESS: {
       const newState = { ...state };
@@ -80,8 +81,9 @@ export default combineReducers({
 });
 
 // Actions
-export const fetchAllProducts = () => ({
-  type: FETCH_ALL_REQUEST
+export const fetchProducts = filter => ({
+  type: FETCH_PRODUCTS_REQUEST,
+  payload: { filter }
 });
 
 export const addProduct = name => ({
@@ -137,20 +139,32 @@ export const setVisibilityFilter = filter => ({
 
 const stateSelector = state => state[moduleName];
 
+const getFetchMethodByFilter = (filter) => {
+  switch (filter) {
+    case 'active':
+      return () => fetchFilteredProducts(false);
+    case 'completed':
+      return () => fetchFilteredProducts(true);
+    default:
+      return fetchAllProducts;
+  }
+}
+
 // Sagas
-function* fetchAllSaga() {
-  const ref = firebase.database().ref("products");
-
+function* fetchProductsSaga({ payload }) {
   yield put({
-    type: FETCH_ALL_START
+    type: FETCH_PRODUCTS_START
   });
-  try {
-    const snapshot = yield call([ref, ref.once], "value");
 
+  const { filter } = payload;
+  const loadProducts = getFetchMethodByFilter(filter);
+
+  try {
+    const snapshot = yield call(loadProducts);
     const value = snapshot.val();
 
     yield put({
-      type: FETCH_ALL_SUCCESS,
+      type: FETCH_PRODUCTS_SUCCESS,
       payload: value || {}
     });
   } catch (error) {
@@ -229,7 +243,7 @@ function* toggleProductSaga({ payload }) {
 
 export function* saga() {
   yield all([
-    takeEvery(FETCH_ALL_REQUEST, fetchAllSaga),
+    takeEvery(FETCH_PRODUCTS_REQUEST, fetchProductsSaga),
     takeEvery(ADD_PRODUCT_REQUEST, addProdcutSaga),
     takeEvery(DELETE_PRODUCT_REQUEST, deleteProdcutSaga),
     takeEvery(TOGGLE_PRODUCT_REQUEST, toggleProductSaga)

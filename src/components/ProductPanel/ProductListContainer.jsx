@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import ProductList from "./ProductList";
-import { fetchAllProducts, addProduct, toggleProduct, deleteProduct, getFilteredProducts } from "../../ducks/products";
+import { fetchProducts, addProduct, toggleProduct, deleteProduct, getFilteredProducts } from "../../ducks/products";
 
 class ProductListContainer extends Component {
   componentDidMount() {
@@ -17,8 +17,8 @@ class ProductListContainer extends Component {
   }
 
   fetchData() {
-    const { filter, fetchProducts } = this.props;
-    fetchProducts(filter);
+    const { filter, fetchProducts: fetchProductsData } = this.props;
+    fetchProductsData(filter);
   }
 
   render() {
@@ -49,7 +49,7 @@ const mapStateToProps = ({ products, visibilityFilter }) => ({
 });
 
 export default connect(mapStateToProps, {
-  fetchProducts: fetchAllProducts,
+  fetchProducts,
   onProductAdd: addProduct,
   onProductToggle: toggleProduct,
   onProductDelete: deleteProduct
