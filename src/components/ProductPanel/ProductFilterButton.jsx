@@ -3,7 +3,6 @@ import PropTypes from "prop-types";
 import { NavLink } from "react-router-dom";
 import RaisedButton from "material-ui/RaisedButton";
 import witStateful from "./withStateful";
-import "./ProductFilterButton.css";
 
 const StatefulNavLink = witStateful(NavLink);
 
@@ -13,7 +12,7 @@ const ProductFilterButton = ({ filter, label }) => (
       <RaisedButton
         label={label}
         primary
-        containerElement={<StatefulNavLink exact to={`/${filter}`} activeClassName="filter-button--active" />}
+        containerElement={<StatefulNavLink exact to={`/${filter}`} activeStyle={{ backgroundColor: "#6be9f9" }} />}
       />
     </div>
   </div>
