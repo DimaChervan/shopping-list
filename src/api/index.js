@@ -21,3 +21,32 @@ export const toggleProduct = (id, product) =>
     .database()
     .ref(`${refName}/${id}`)
     .update(product);
+
+/* 
+ref.on("value", function(snapshot) {
+  console.log("value");
+  console.log(snapshot);
+  console.log(snapshot.val());
+}); 
+const startKey = ref.push().key;
+ref
+  .orderByKey()
+  .startAt(startKey)
+  .on("child_added", function(snapshot) {
+    console.log("added");
+    console.log(snapshot);
+    console.log(snapshot.val());
+  });
+
+ref.on("child_changed", function(snapshot) {
+  console.log("changed");
+  console.log(snapshot);
+  console.log(snapshot.val());
+});
+
+ref.on("child_removed", function(snapshot) {
+  console.log("removed");
+  console.log(snapshot);
+  console.log(snapshot.val());
+});
+*/
