@@ -37,11 +37,11 @@ const productsReducer = (state = {}, action) => {
     case FETCH_PRODUCTS_SUCCESS:
       return { ...state, ...action.payload };
     case ADD_PRODUCT_SUCCESS: {
-      const newState = { ...state };
-      newState[payload.id] = payload;
-      return newState;
+      return {
+        ...state,
+        [payload.id]: payload
+      };
     }
-
     case DELETE_PRODUCT_REQUEST: {
       const newState = { ...state };
       delete newState[payload.id];
