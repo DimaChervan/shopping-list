@@ -5,7 +5,7 @@ import Subheader from "material-ui/Subheader";
 import ProductItem from "./ProductItem";
 import ProductForm from "./ProductForm";
 
-const ProductList = ({ products, onProductAdd, onProductToggle, onProductDelete }) => {
+const ProductList = ({ products, onProductSave, onProductToggle, onProductDelete }) => {
   const productItems = products.map(product => (
     <ProductItem {...product} key={product.id} onProductToggle={onProductToggle} onProductDelete={onProductDelete} />
   ));
@@ -13,7 +13,7 @@ const ProductList = ({ products, onProductAdd, onProductToggle, onProductDelete 
   return (
     <List>
       <Subheader>
-        <ProductForm onProductAdd={onProductAdd} />
+        <ProductForm onProductSave={onProductSave} />
       </Subheader>
       {productItems}
     </List>
@@ -22,7 +22,7 @@ const ProductList = ({ products, onProductAdd, onProductToggle, onProductDelete 
 
 ProductList.propTypes = {
   products: PropTypes.arrayOf(PropTypes.object).isRequired,
-  onProductAdd: PropTypes.func.isRequired,
+  onProductSave: PropTypes.func.isRequired,
   onProductToggle: PropTypes.func.isRequired,
   onProductDelete: PropTypes.func.isRequired
 };

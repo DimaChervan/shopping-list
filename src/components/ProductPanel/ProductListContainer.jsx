@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import ProductList from "./ProductList";
-import { fetchProducts, addProduct, toggleProduct, deleteProduct, getFilteredProducts } from "../../ducks/products";
+import { fetchProducts, saveProduct, toggleProduct, deleteProduct, getFilteredProducts } from "../../ducks/products";
 
 class ProductListContainer extends Component {
   componentDidMount() {
@@ -22,12 +22,12 @@ class ProductListContainer extends Component {
   }
 
   render() {
-    const { products, onProductAdd, onProductToggle, onProductDelete } = this.props;
+    const { products, onProductSave, onProductToggle, onProductDelete } = this.props;
 
     return (
       <ProductList
         products={products}
-        onProductAdd={onProductAdd}
+        onProductSave={onProductSave}
         onProductToggle={onProductToggle}
         onProductDelete={onProductDelete}
       />
@@ -39,7 +39,7 @@ ProductListContainer.propTypes = {
   products: PropTypes.arrayOf(PropTypes.object).isRequired,
   filter: PropTypes.string.isRequired,
   fetchProducts: PropTypes.func.isRequired,
-  onProductAdd: PropTypes.func.isRequired,
+  onProductSave: PropTypes.func.isRequired,
   onProductToggle: PropTypes.func.isRequired,
   onProductDelete: PropTypes.func.isRequired
 };
@@ -50,7 +50,7 @@ const mapStateToProps = ({ products, visibilityFilter }) => ({
 
 export default connect(mapStateToProps, {
   fetchProducts,
-  onProductAdd: addProduct,
+  onProductSave: saveProduct,
   onProductToggle: toggleProduct,
   onProductDelete: deleteProduct
 })(ProductListContainer);

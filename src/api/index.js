@@ -1,6 +1,6 @@
 import firebase from "firebase";
 
-const refName = "products";
+const refName = "products"; // moduleName?
 
 const ref = firebase.database().ref(refName);
 
@@ -12,7 +12,7 @@ export const fetchFilteredProducts = (key, filter) =>
     .equalTo(filter)
     .once("value");
 
-export const addProduct = product => ref.push(product);
+export const saveProduct = product => ref.push(product);
 
 export const deleteProduct = product => ref.update(product);
 
@@ -22,6 +22,7 @@ export const toggleProduct = (id, product) =>
     .ref(`${refName}/${id}`)
     .update(product);
 
+// add new method to get data object
 /* 
 ref.on("value", function(snapshot) {
   console.log("value");

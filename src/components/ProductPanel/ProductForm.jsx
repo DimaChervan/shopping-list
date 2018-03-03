@@ -16,14 +16,14 @@ class ProductForm extends Component {
   };
 
   handleFormSubmit = event => {
-    const { onProductAdd } = this.props;
+    const { onProductSave } = this.props;
     const { name } = this.state;
 
     event.preventDefault();
     if (name.length === 0) {
       return false;
     }
-    onProductAdd(name);
+    onProductSave(name);
     this.setState({ name: "" });
 
     return true;
@@ -41,7 +41,7 @@ class ProductForm extends Component {
 }
 
 ProductForm.propTypes = {
-  onProductAdd: PropTypes.func.isRequired
+  onProductSave: PropTypes.func.isRequired
 };
 
 export default ProductForm;

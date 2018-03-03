@@ -1,27 +1,34 @@
 import { combineReducers } from "redux";
-import { call, put, takeEvery, all, select } from "redux-saga/effects";
+import firebase from "firebase";
+import { eventChannel, buffers } from "redux-saga";
+import { call, put, takeEvery, all, select, take, fork, cancel, flush } from "redux-saga/effects";
 import appName from "../config";
 import * as api from "../api";
+
+const refName = "products";
+
+const ref = firebase.database().ref(refName);
 
 // Constants
 const moduleName = "products";
 const prefix = `${appName}/${moduleName}/`;
 const FETCH_PRODUCTS_REQUEST = `${prefix}FETCH_PRODUCTS_REQUEST`;
-const FETCH_PRODUCTS_START = `${prefix}FETCH_PRODUCTS_START`;
+const FETCH_PRODUCTS_REQUEST_CANCELED = `${prefix}FETCH_PRODUCTS_REQUEST_CANCELED`;
+// const FETCH_PRODUCTS_START = `${prefix}FETCH_PRODUCTS_START`;
 const FETCH_PRODUCTS_SUCCESS = `${prefix}FETCH_PRODUCTS_SUCCESS`;
-const ADD_PRODUCT_REQUEST = `${prefix}ADD_PRODUCT_REQUEST`;
-const ADD_PRODUCT_START = `${prefix}ADD_PRODUCT_START`;
-const ADD_PRODUCT_SUCCESS = `${prefix}ADD_PRODUCT_SUCCESS`;
+const SAVE_PRODUCT_REQUEST = `${prefix}SAVE_PRODUCT_REQUEST`;
+const SAVE_PRODUCT_START = `${prefix}SAVE_PRODUCT_START`;
+const SAVE_PRODUCT_SUCCESS = `${prefix}SAVE_PRODUCT_SUCCESS`;
 const DELETE_PRODUCT_START = `${prefix}DELETE_PRODUCT_START`;
 const DELETE_PRODUCT_REQUEST = `${prefix}DELETE_PRODUCT_REQUEST`;
 const DELETE_PRODUCT_SUCCESS = `${prefix}DELETE_PRODUCT_SUCCESS`;
 const TOGGLE_PRODUCT_START = `${prefix}TOGGLE_PRODUCT_START`;
 const TOGGLE_PRODUCT_REQUEST = `${prefix}TOGGLE_PRODUCT_REQUEST`;
-const TOGGLE_PRODUCT_SUCCESS = `${prefix}TOGGLE_PRODUCT_SUCCESS`;
+// const TOGGLE_PRODUCT_SUCCESS = `${prefix}TOGGLE_PRODUCT_SUCCESS`;
 const PROCESS_ALL_PRODUCTS = `${prefix}PROCESS_ALL_PRODUCTS`;
 const SET_VISIBILITY_FILTER = `${prefix}SET_VISIBILITY_FILTER`;
 
-const productFilterKey = "completed";
+// const productFilterKey = "completed";
 
 export const VISIBILITY_FILTERS = {
   all: "",
@@ -36,21 +43,15 @@ const productsReducer = (state = {}, action) => {
   switch (type) {
     case FETCH_PRODUCTS_SUCCESS:
       return { ...state, ...action.payload };
-    case ADD_PRODUCT_SUCCESS: {
+    case SAVE_PRODUCT_SUCCESS: {
       return {
         ...state,
         [payload.id]: payload
       };
     }
-    case DELETE_PRODUCT_REQUEST: {
+    case DELETE_PRODUCT_SUCCESS: {
       const newState = { ...state };
       delete newState[payload.id];
-      return newState;
-    }
-    case TOGGLE_PRODUCT_SUCCESS: {
-      const { id } = payload;
-      const newState = { ...state };
-      newState[id].completed = !newState[id].completed;
       return newState;
     }
     case PROCESS_ALL_PRODUCTS: {
@@ -87,8 +88,8 @@ export const fetchProducts = filter => ({
   payload: { filter }
 });
 
-export const addProduct = name => ({
-  type: ADD_PRODUCT_REQUEST,
+export const saveProduct = name => ({
+  type: SAVE_PRODUCT_REQUEST,
   payload: { name, completed: false }
 });
 
@@ -140,7 +141,7 @@ export const setVisibilityFilter = filter => ({
 
 const stateSelector = state => state[moduleName];
 
-const getFetchMethodByFilter = filter => {
+/* const getFetchMethodByFilter = filter => {
   switch (filter) {
     case VISIBILITY_FILTERS.active:
       return () => api.fetchFilteredProducts(productFilterKey, false);
@@ -149,43 +150,16 @@ const getFetchMethodByFilter = filter => {
     default:
       return api.fetchAllProducts;
   }
-};
+}; */
 
-// Sagas
-function* fetchProductsSaga({ payload }) {
+function* saveProductSaga({ payload }) {
   yield put({
-    type: FETCH_PRODUCTS_START
-  });
-
-  const { filter } = payload;
-  const loadProducts = getFetchMethodByFilter(filter);
-
-  try {
-    const snapshot = yield call(loadProducts);
-    const value = snapshot.val();
-
-    yield put({
-      type: FETCH_PRODUCTS_SUCCESS,
-      payload: value || {}
-    });
-  } catch (error) {
-    console.log(error);
-  }
-}
-
-function* addProductSaga({ payload }) {
-  yield put({
-    type: ADD_PRODUCT_START
+    type: SAVE_PRODUCT_START
   });
 
   try {
     const updates = { ...payload, createdDate: Date.now() }; // firebase functions
-    const { key } = yield call(api.addProduct, updates);
-
-    yield put({
-      type: ADD_PRODUCT_SUCCESS,
-      payload: { id: key, ...updates }
-    });
+    yield call(api.saveProduct, updates);
   } catch (error) {
     console.log(error);
   }
@@ -202,11 +176,6 @@ function* deleteProductSaga({ payload }) {
     };
 
     yield call(api.deleteProduct, updates);
-
-    yield put({
-      type: DELETE_PRODUCT_SUCCESS,
-      payload
-    });
   } catch (error) {
     console.log(error);
   }
@@ -225,21 +194,92 @@ function* toggleProductSaga({ payload }) {
     const updates = { completed: !product.completed };
 
     yield call(api.toggleProduct, id, updates);
-
-    yield put({
-      type: TOGGLE_PRODUCT_SUCCESS,
-      payload
-    });
   } catch (error) {
     console.log(error);
   }
 }
 
+function createEventChannel(childEventType) {
+  const listener = eventChannel(emit => {
+    ref.on(childEventType, snap => {
+      emit({
+        id: snap.key,
+        ...snap.val()
+      });
+    }); // eto in yeild
+
+    return ref.off;
+  }, buffers.expanding(1));
+
+  return listener;
+}
+
+function* getDataAndListenToChannel(childEventType) {
+  const chan = yield call(createEventChannel, childEventType);
+  try {
+    try {
+      const snap = yield call(api.fetchAllProducts);
+      yield flush(chan);
+      const val = snap.val(); // в yield
+      const value = val || {};
+      yield put({
+        type: FETCH_PRODUCTS_SUCCESS,
+        payload: value
+      });
+    } catch (error) {
+      console.log("error");
+    }
+    while (true) {
+      const data = yield take(chan);
+      yield put({
+        type: SAVE_PRODUCT_SUCCESS,
+        payload: data
+      });
+    }
+  } finally {
+    chan.close();
+  }
+}
+
+function* watchProductListener(childEventType) {
+  while (true) {
+    yield take(FETCH_PRODUCTS_REQUEST);
+    let task = yield fork(getDataAndListenToChannel, childEventType);
+    while (true) {
+      const action = yield take([FETCH_PRODUCTS_REQUEST, FETCH_PRODUCTS_REQUEST_CANCELED]);
+      yield cancel(task);
+
+      if (action.type === FETCH_PRODUCTS_REQUEST) {
+        task = yield fork(getDataAndListenToChannel, childEventType);
+      } else {
+        break;
+      }
+    }
+  }
+}
+
+function* watchProductRemoved() {
+  const chan = yield call(createEventChannel, "child_removed");
+  try {
+    while (true) {
+      const data = yield take(chan);
+      yield put({
+        type: DELETE_PRODUCT_SUCCESS,
+        payload: data
+      });
+    }
+  } catch (error) {
+    console.log("err");
+  }
+}
+
 export function* saga() {
   yield all([
-    takeEvery(FETCH_PRODUCTS_REQUEST, fetchProductsSaga),
-    takeEvery(ADD_PRODUCT_REQUEST, addProductSaga),
+    takeEvery(SAVE_PRODUCT_REQUEST, saveProductSaga),
+    takeEvery(TOGGLE_PRODUCT_REQUEST, toggleProductSaga),
     takeEvery(DELETE_PRODUCT_REQUEST, deleteProductSaga),
-    takeEvery(TOGGLE_PRODUCT_REQUEST, toggleProductSaga)
+    watchProductListener("child_added"),
+    watchProductListener("child_changed"),
+    watchProductRemoved()
   ]);
 }
