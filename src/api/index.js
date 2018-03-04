@@ -4,7 +4,13 @@ const refName = "products"; // moduleName?
 
 const ref = firebase.database().ref(refName);
 
-export const fetchAllProducts = () => ref.once("value");
+export const fetchAllProducts = () => {
+  ref.once("value").then(snap => {
+    const val = snap.val();
+
+    return val || {};
+  });
+};
 
 export const fetchFilteredProducts = (key, filter) =>
   ref
@@ -22,32 +28,19 @@ export const toggleProduct = (id, product) =>
     .ref(`${refName}/${id}`)
     .update(product);
 
-// add new method to get data object
-/* 
-ref.on("value", function(snapshot) {
-  console.log("value");
-  console.log(snapshot);
-  console.log(snapshot.val());
-}); 
-const startKey = ref.push().key;
-ref
-  .orderByKey()
-  .startAt(startKey)
-  .on("child_added", function(snapshot) {
-    console.log("added");
-    console.log(snapshot);
-    console.log(snapshot.val());
+const addChildEventListener = (eventType, emit) => {
+  ref.on(eventType, snap => {
+    emit({
+      id: snap.key,
+      ...snap.val()
+    });
   });
 
-ref.on("child_changed", function(snapshot) {
-  console.log("changed");
-  console.log(snapshot);
-  console.log(snapshot.val());
-});
+  return () => ref.off(eventType);
+};
 
-ref.on("child_removed", function(snapshot) {
-  console.log("removed");
-  console.log(snapshot);
-  console.log(snapshot.val());
-});
-*/
+export const onProductAdd = emit => addChildEventListener("child_added", emit);
+
+export const onProductChanged = emit => addChildEventListener("child_changed", emit);
+
+export const onProductRemoved = emit => addChildEventListener("child_removed", emit);

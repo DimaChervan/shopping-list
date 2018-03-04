@@ -1,13 +1,8 @@
 import { combineReducers } from "redux";
-import firebase from "firebase";
 import { eventChannel, buffers } from "redux-saga";
 import { call, put, takeEvery, all, select, take, fork, cancel, flush } from "redux-saga/effects";
 import appName from "../config";
 import * as api from "../api";
-
-const refName = "products";
-
-const ref = firebase.database().ref(refName);
 
 // Constants
 const moduleName = "products";
@@ -199,32 +194,21 @@ function* toggleProductSaga({ payload }) {
   }
 }
 
-function createEventChannel(childEventType) {
-  const listener = eventChannel(emit => {
-    ref.on(childEventType, snap => {
-      emit({
-        id: snap.key,
-        ...snap.val()
-      });
-    }); // eto in yeild
-
-    return ref.off;
-  }, buffers.expanding(1));
+function createEventChannel(handler) {
+  const listener = eventChannel(handler, buffers.expanding(1));
 
   return listener;
 }
 
-function* getDataAndListenToChannel(childEventType) {
-  const chan = yield call(createEventChannel, childEventType);
+function* getDataAndListenToChannel(channelHandler) {
+  const chan = yield call(createEventChannel, channelHandler);
   try {
     try {
-      const snap = yield call(api.fetchAllProducts);
+      const data = yield call(api.fetchAllProducts);
       yield flush(chan);
-      const val = snap.val(); // в yield
-      const value = val || {};
       yield put({
         type: FETCH_PRODUCTS_SUCCESS,
-        payload: value
+        payload: data
       });
     } catch (error) {
       console.log("error");
@@ -241,16 +225,16 @@ function* getDataAndListenToChannel(childEventType) {
   }
 }
 
-function* watchProductListener(childEventType) {
+function* watchProductListener(handler) {
   while (true) {
     yield take(FETCH_PRODUCTS_REQUEST);
-    let task = yield fork(getDataAndListenToChannel, childEventType);
+    let task = yield fork(getDataAndListenToChannel, handler);
     while (true) {
       const action = yield take([FETCH_PRODUCTS_REQUEST, FETCH_PRODUCTS_REQUEST_CANCELED]);
       yield cancel(task);
 
       if (action.type === FETCH_PRODUCTS_REQUEST) {
-        task = yield fork(getDataAndListenToChannel, childEventType);
+        task = yield fork(getDataAndListenToChannel, handler);
       } else {
         break;
       }
@@ -259,7 +243,7 @@ function* watchProductListener(childEventType) {
 }
 
 function* watchProductRemoved() {
-  const chan = yield call(createEventChannel, "child_removed");
+  const chan = yield call(createEventChannel, api.onProductRemoved);
   try {
     while (true) {
       const data = yield take(chan);
@@ -278,8 +262,8 @@ export function* saga() {
     takeEvery(SAVE_PRODUCT_REQUEST, saveProductSaga),
     takeEvery(TOGGLE_PRODUCT_REQUEST, toggleProductSaga),
     takeEvery(DELETE_PRODUCT_REQUEST, deleteProductSaga),
-    watchProductListener("child_added"),
-    watchProductListener("child_changed"),
+    watchProductListener(api.onProductAdd),
+    watchProductListener(api.onProductChanged),
     watchProductRemoved()
   ]);
 }
