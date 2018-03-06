@@ -23,7 +23,7 @@ const TOGGLE_PRODUCT_REQUEST = `${prefix}TOGGLE_PRODUCT_REQUEST`;
 const PROCESS_ALL_PRODUCTS = `${prefix}PROCESS_ALL_PRODUCTS`;
 const SET_VISIBILITY_FILTER = `${prefix}SET_VISIBILITY_FILTER`;
 
-// const productFilterKey = "completed";
+const productFilterKey = "completed";
 
 export const VISIBILITY_FILTERS = {
   all: "",
@@ -37,7 +37,7 @@ const productsReducer = (state = {}, action) => {
 
   switch (type) {
     case FETCH_PRODUCTS_SUCCESS:
-      return { ...state, ...action.payload };
+      return { ...action.payload };
     case SAVE_PRODUCT_SUCCESS: {
       return {
         ...state,
@@ -136,7 +136,7 @@ export const setVisibilityFilter = filter => ({
 
 const stateSelector = state => state[moduleName];
 
-/* const getFetchMethodByFilter = filter => {
+const getFetchMethodByFilter = filter => {
   switch (filter) {
     case VISIBILITY_FILTERS.active:
       return () => api.fetchFilteredProducts(productFilterKey, false);
@@ -145,7 +145,7 @@ const stateSelector = state => state[moduleName];
     default:
       return api.fetchAllProducts;
   }
-}; */
+};
 
 function* saveProductSaga({ payload }) {
   yield put({
@@ -200,11 +200,12 @@ function createEventChannel(handler) {
   return listener;
 }
 
-function* getDataAndListenToChannel(channelHandler) {
+function* getDataAndListenToChannel(channelHandler, filter) {
   const chan = yield call(createEventChannel, channelHandler);
   try {
     try {
-      const data = yield call(api.fetchAllProducts);
+      const loadProducts = yield call(getFetchMethodByFilter, filter);
+      const data = yield call(loadProducts);
       yield flush(chan);
       yield put({
         type: FETCH_PRODUCTS_SUCCESS,
@@ -225,16 +226,20 @@ function* getDataAndListenToChannel(channelHandler) {
   }
 }
 
+const getPayloadFromAction = ({ payload }) => payload;
+
 function* watchProductListener(handler) {
   while (true) {
-    yield take(FETCH_PRODUCTS_REQUEST);
-    let task = yield fork(getDataAndListenToChannel, handler);
+    let action = yield take(FETCH_PRODUCTS_REQUEST);
+    let payload = yield call(getPayloadFromAction, action);
+    let task = yield fork(getDataAndListenToChannel, handler, payload.filter);
     while (true) {
-      const action = yield take([FETCH_PRODUCTS_REQUEST, FETCH_PRODUCTS_REQUEST_CANCELED]);
+      action = yield take([FETCH_PRODUCTS_REQUEST, FETCH_PRODUCTS_REQUEST_CANCELED]);
       yield cancel(task);
 
       if (action.type === FETCH_PRODUCTS_REQUEST) {
-        task = yield fork(getDataAndListenToChannel, handler);
+        payload = yield call(getPayloadFromAction, action);
+        task = yield fork(getDataAndListenToChannel, handler, payload.filter);
       } else {
         break;
       }

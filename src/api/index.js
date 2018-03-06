@@ -4,19 +4,16 @@ const refName = "products"; // moduleName?
 
 const ref = firebase.database().ref(refName);
 
-export const fetchAllProducts = () => {
-  ref.once("value").then(snap => {
+const fetchProducts = fbRef =>
+  fbRef.once("value").then(snap => {
     const val = snap.val();
 
     return val || {};
   });
-};
 
-export const fetchFilteredProducts = (key, filter) =>
-  ref
-    .orderByChild(key)
-    .equalTo(filter)
-    .once("value");
+export const fetchAllProducts = () => fetchProducts(ref);
+
+export const fetchFilteredProducts = (key, filter) => fetchProducts(ref.orderByChild(key).equalTo(filter));
 
 export const saveProduct = product => ref.push(product);
 
