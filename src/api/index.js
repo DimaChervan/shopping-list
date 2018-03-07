@@ -26,14 +26,14 @@ export const toggleProduct = (id, product) =>
     .update(product);
 
 const addChildEventListener = (eventType, emit) => {
-  ref.on(eventType, snap => {
+  const handler = snap =>
     emit({
       id: snap.key,
       ...snap.val()
     });
-  });
+  ref.on(eventType, handler);
 
-  return () => ref.off(eventType);
+  return () => ref.off(eventType, handler);
 };
 
 export const onProductAdd = emit => addChildEventListener("child_added", emit);
